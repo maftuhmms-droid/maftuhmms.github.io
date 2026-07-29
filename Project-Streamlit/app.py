@@ -59,8 +59,26 @@ if type_of == "Income":
     if whats == "Sallary":
         input_nominal()
         month_sallary = st.sidebar.select_slider("Select Month", ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Aug","Sep","Okt","Nov","Des"])
-        combine = "2026-" + month_sallary
-        selected_date = combine
+        month_number = {
+            "Jan":1,
+            "Feb":2,
+            "Mar":3,
+            "Apr":4,
+            "Mei":5,
+            "Jun":6,
+            "Jul":7,
+            "Aug":8,
+            "Sep":9,
+            "Okt":10,
+            "Nov":11,
+            "Des":12
+        }
+
+        selected_date = datetime.date(
+            2026,
+            month_number[month_sallary],
+            1
+        )
         desc = "Monthly"
     elif whats == "Other":
         input_nominal()
@@ -126,14 +144,11 @@ else:
     expend = 0
     loan = 0
 
-
-df["date"] = pd.to_datetime(df["date"])
-
-df["Year"] = df["date"].dt.year
-
-df["Month"] = df["date"].dt.strftime("%b")
-
-df["MonthNumber"] = df["date"].dt.month
+if not df.empty and "date" in df.columns:
+    df["date"] = pd.to_datetime(df["date"])
+    df["Year"] = df["date"].dt.year
+    df["Month"] = df["date"].dt.strftime("%b")
+    df["MonthNumber"] = df["date"].dt.month
 
 #======================================================
 # df = pd.DataFrame({
@@ -151,40 +166,43 @@ df["MonthNumber"] = df["date"].dt.month
 #     color=["#1AFF00", "#E5FF00", "#FF0000"],
 # )
 
-for year in sorted(df["Year"].unique()):
+if not df.empty and "Year" in df.columns:
+    for year in sorted(df["Year"].unique()):
 
-    st.subheader(f"{year}")
+        st.subheader(f"{year}")
 
-    chart = (
-        df[df["Year"]==year]
-        .groupby(
-            ["MonthNumber","Month","menu"]
-        )["nominal"]
-        .sum()
-        .unstack(fill_value=0)
-        .reset_index()
-        .sort_values("MonthNumber")
-    )
+        chart = (
+            df[df["Year"]==year]
+            .groupby(
+                ["MonthNumber","Month","menu"]
+            )["nominal"]
+            .sum()
+            .unstack(fill_value=0)
+            .reset_index()
+            .sort_values("MonthNumber")
+        )
 
-    chart = chart.drop(columns="MonthNumber")
+        chart = chart.drop(columns="MonthNumber")
 
-    fig = px.bar(
-        chart,
-        x="Month",
-        y=[
-            col for col in chart.columns 
-            if col != "Month"
-        ],
-        barmode="group",
-        color_discrete_map={
-            "Income": "#1AFF00",
-            "Expend": "#E5FF00",
-            "Loan": "#FF0000"
-        }
-    )
+        fig = px.bar(
+            chart,
+            x="Month",
+            y=[
+                col for col in chart.columns 
+                if col != "Month"
+            ],
+            barmode="group",
+            color_discrete_map={
+                "Income": "#1AFF00",
+                "Expend": "#E5FF00",
+                "Loan": "#FF0000"
+            }
+        )
 
+        st.plotly_chart(
+            fig,
+            use_container_width=True
+        )
 
-    st.plotly_chart(
-        fig,
-        use_container_width=True
-    )
+else:
+    st.info("Not yet transaction")
