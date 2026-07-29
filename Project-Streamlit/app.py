@@ -3,6 +3,11 @@ import datetime
 import pandas as pd
 import plotly.express as px
 
+#initialize connection
+conn = st.connection("postgresql", type="sql")
+# Perform query.
+df = conn.query('SELECT * FROM mytable;', ttl="10m")
+
 today = datetime.datetime.now()
 formatted_date = today.strftime("%Y-%m-%d-%H:%M")
 
@@ -35,6 +40,9 @@ def input_nominal():
 
 st.title("(FD) - FROM THIS")
 st.sidebar.markdown("<h3>Input This !", unsafe_allow_html=True)
+# Print results.
+for row in df.itertuples():
+    st.write(f"{row.name} has a :{row.pet}:")
 
 type_of = st.sidebar.radio(
     "Select the menu",
@@ -208,3 +216,4 @@ else:
 
 st.subheader("Data")
 st.dataframe(pd.DataFrame(st.session_state.transactions))
+
