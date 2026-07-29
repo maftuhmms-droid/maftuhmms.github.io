@@ -116,13 +116,16 @@ st.dataframe(pd.DataFrame(st.session_state.transactions))
 
 
 df = pd.DataFrame(st.session_state.transactions)
-income = df[df["menu"]=="Income"]["nominal"].sum()
-expend = df[df["menu"]=="Expend"]["nominal"].sum()
-loan = df[df["menu"]=="Loan"]["nominal"].sum()
-balance = income - expend
-color=["#1AFF00", "#E5FF00", "#FF0000", "#00C3FF"]
-# if df.empty():
-#     st.stop()
+if not df.empty and "menu" in df.columns:
+    income = df[df["menu"]=="Income"]["nominal"].sum()
+    expend = df[df["menu"]=="Expend"]["nominal"].sum()
+    loan = df[df["menu"]=="Loan"]["nominal"].sum()
+    balance = income - expend
+else:
+    income = 0
+    expend = 0
+    loan = 0
+
 
 df["date"] = pd.to_datetime(df["date"])
 
