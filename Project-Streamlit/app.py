@@ -122,8 +122,7 @@ if st.sidebar.button("Add"):
             f"Success add at {formatted_date}"
         )
 
-st.subheader("Data")
-st.dataframe(pd.DataFrame(st.session_state.transactions))
+
 
 # st.subheader("Expend")
 # st.dataframe(pd.DataFrame(st.session_state.list_expend))
@@ -138,7 +137,7 @@ if not df.empty and "menu" in df.columns:
     income = df[df["menu"]=="Income"]["nominal"].sum()
     expend = df[df["menu"]=="Expend"]["nominal"].sum()
     loan = df[df["menu"]=="Loan"]["nominal"].sum()
-    balance = income - expend
+   
 else:
     income = 0
     expend = 0
@@ -206,3 +205,6 @@ if not df.empty and "Year" in df.columns:
 
 else:
     st.info("Not yet transaction")
+
+st.subheader("Data")
+st.dataframe(pd.DataFrame(st.session_state.transactions))
