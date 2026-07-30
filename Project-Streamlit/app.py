@@ -2,11 +2,12 @@ import streamlit as st
 import datetime
 import pandas as pd
 import plotly.express as px
+from sqlalchemy import text
 
 #initialize connection
 conn = st.connection("postgresql", type="sql")
 # Perform query.
-df = conn.query('SELECT * FROM mytable;', ttl="10m")
+df = conn.query('SELECT * FROM transactions;', ttl="10m")
 
 today = datetime.datetime.now()
 formatted_date = today.strftime("%Y-%m-%d-%H:%M")
@@ -38,11 +39,11 @@ def input_nominal():
     return nominal
     
 
-st.title("(FD) - FROM THIS")
+st.title("(FD) - FROM DATA")
 st.sidebar.markdown("<h3>Input This !", unsafe_allow_html=True)
 # Print results.
-for row in df.itertuples():
-    st.write(f"{row.name} has a :{row.pet}:")
+#for row in df.itertuples():
+#st.write(df) #(f"{row.name} has a :{row.pet}:")
 
 type_of = st.sidebar.radio(
     "Select the menu",
@@ -117,19 +118,30 @@ else:
     st.write("Error Else type")
 
 if st.sidebar.button("Add"):
-    st.session_state.transactions.append(
-        {
-            "menu": type_of,
-            "type": whats,
-            "nominal": nominal,
-            "date": selected_date,
-            "desc": desc
-        }
-    )
-    st.sidebar.success(
-            f"Success add at {formatted_date}"
-        )
 
+    with conn.session as session:
+        session.execute(
+            text("""
+            INSERT INTO transactions
+            (menu, type, nominal, date, description)
+            VALUES
+            (:menu, :type, :nominal, :date, :description)
+            """),
+            {
+                "menu": type_of,
+                "type": whats,
+                "nominal": nominal,
+                "date": selected_date,
+                "description": desc
+            }
+        )
+        session.commit()
+
+    st.sidebar.success(
+        f"Success add at {formatted_date}"
+    )
+
+    st.rerun()
 
 
 # st.subheader("Expend")
@@ -140,7 +152,12 @@ if st.sidebar.button("Add"):
 
 
 
-df = pd.DataFrame(st.session_state.transactions)
+#df = pd.DataFrame(st.session_state.transactions)
+df = conn.query(
+    "SELECT * FROM transactions",
+    ttl=0
+)
+
 if not df.empty and "menu" in df.columns:
     income = df[df["menu"]=="Income"]["nominal"].sum()
     expend = df[df["menu"]=="Expend"]["nominal"].sum()
@@ -190,7 +207,6 @@ if not df.empty and "Year" in df.columns:
         )
 
         chart = chart.drop(columns="MonthNumber")
-
         fig = px.bar(
             chart,
             x="Month",
@@ -215,5 +231,5 @@ else:
     st.info("Not yet transaction")
 
 st.subheader("Data")
-st.dataframe(pd.DataFrame(st.session_state.transactions))
+st.dataframe(df)
 
